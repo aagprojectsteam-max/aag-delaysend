@@ -6,6 +6,8 @@
     <!--
       AAG DelaySend popup. The element ids are the contract with popup.js and the
       Send Later engine (background.js): keep every id, change the layout freely.
+      Texts: data-i18n* keys resolved by ui/aag-i18n.js (Hebrew / English); the
+      Hebrew in the markup is only the fallback before the script runs.
     -->
     <style>
       :root {
@@ -52,8 +54,6 @@
         font-family: system-ui, "Segoe UI", "Noto Sans Hebrew", Arial, sans-serif;
         font-size: 14px;
         line-height: 1.4;
-        direction: rtl;
-        text-align: right;
       }
 
       header {
@@ -63,6 +63,7 @@
         margin-bottom: 10px;
       }
       header img { width: 28px; height: 28px; }
+      header .titles { flex: 1 1 auto; min-width: 0; }
       header h1 {
         margin: 0;
         font-size: 16px;
@@ -72,6 +73,26 @@
         margin: 0;
         color: var(--muted);
         font-size: 12px;
+      }
+      #aag-lang {
+        display: flex;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        overflow: hidden;
+        flex: 0 0 auto;
+      }
+      #aag-lang button {
+        border: 0;
+        background: var(--card);
+        color: var(--muted);
+        font: inherit;
+        font-size: 11.5px;
+        padding: 3px 9px;
+        cursor: pointer;
+      }
+      #aag-lang button.active {
+        background: var(--accent);
+        color: var(--accent-text);
       }
 
       .card {
@@ -217,6 +238,7 @@
         margin-inline-end: 6px;
         transition: transform 0.15s;
       }
+      [dir="rtl"] details.advanced > summary::before { content: "◂"; }
       details.advanced[open] > summary::before { transform: rotate(90deg); }
       details.advanced[open] > summary { border-bottom: 1px solid var(--line); }
 
@@ -305,33 +327,37 @@
   <body>
     <header>
       <img src="/ui/icons/icon.png" alt="">
-      <div>
+      <div class="titles">
         <h1>AAG DelaySend</h1>
-        <p class="sub">שליחה מתוזמנת — ההודעה נשמרת בטיוטות ונשלחת כש־Thunderbird פתוח</p>
+        <p class="sub" data-i18n="subtitle">שליחה מתוזמנת — ההודעה נשמרת בטיוטות ונשלחת כש־Thunderbird פתוח</p>
+      </div>
+      <div id="aag-lang" data-i18n-title="langTitle" title="שפת החלון">
+        <button type="button" data-lang="he" class="active">עברית</button>
+        <button type="button" data-lang="en">English</button>
       </div>
     </header>
 
     <section class="card" id="sendAtTimeDateDiv">
-      <p class="card-title">מתי לשלוח</p>
+      <p class="card-title" data-i18n="whenToSend">מתי לשלוח</p>
       <div class="pickers">
         <input id="send-date" type="date">
         <input id="send-time" type="time">
       </div>
       <div class="chips" id="aag-chips">
-        <button type="button" class="chip" data-minutes="15">בעוד 15 דק׳</button>
-        <button type="button" class="chip" data-minutes="30">בעוד 30 דק׳</button>
-        <button type="button" class="chip" data-minutes="60">בעוד שעה</button>
-        <button type="button" class="chip" data-minutes="120">בעוד שעתיים</button>
-        <button type="button" class="chip" data-day="tomorrow" data-time="09:00">מחר 09:00</button>
-        <button type="button" class="chip" data-day="0" data-time="09:00">יום א׳ 09:00</button>
+        <button type="button" class="chip" data-minutes="15" data-i18n="chip15">בעוד 15 דק׳</button>
+        <button type="button" class="chip" data-minutes="30" data-i18n="chip30">בעוד 30 דק׳</button>
+        <button type="button" class="chip" data-minutes="60" data-i18n="chip1h">בעוד שעה</button>
+        <button type="button" class="chip" data-minutes="120" data-i18n="chip2h">בעוד שעתיים</button>
+        <button type="button" class="chip" data-day="tomorrow" data-time="09:00" data-i18n="chipTomorrow">מחר 09:00</button>
+        <button type="button" class="chip" data-day="0" data-time="09:00" data-i18n="chipSunday">יום א׳ 09:00</button>
       </div>
       <details class="freetext" id="aag-freetext">
-        <summary>זמן בטקסט חופשי (באנגלית, למשל tomorrow at 9am)</summary>
+        <summary data-i18n="freetext">זמן בטקסט חופשי (באנגלית, למשל tomorrow at 9am)</summary>
         <input id="send-datetime" type="text" dir="ltr">
       </details>
     </section>
 
-    <button id="sendScheduleButton" disabled title="Ctrl+Enter / Enter">
+    <button id="sendScheduleButton" disabled data-i18n-title="scheduleTitle" title="Ctrl+Enter / Enter">
       הזן תאריך תקף
     </button>
 
@@ -341,28 +367,28 @@
     </div>
 
     <details class="advanced" id="aag-advanced">
-      <summary>חזרה על השליחה ואפשרויות נוספות</summary>
+      <summary data-i18n="advanced">חזרה על השליחה ואפשרויות נוספות</summary>
 
       <div class="adv-section">
-        <p class="adv-title">חזרה על השליחה</p>
+        <p class="adv-title" data-i18n="recurTitle">חזרה על השליחה</p>
         <div class="radios">
-          <label><input type="radio" id="once" name="recur" value="none" checked> ללא (חד־פעמי)</label>
-          <label><input type="radio" id="minutely" name="recur" value="minutely"> כל דקה</label>
-          <label><input type="radio" id="daily" name="recur" value="daily"> יומי</label>
-          <label><input type="radio" id="weekly" name="recur" value="weekly"> שבועי</label>
-          <label><input type="radio" id="monthly" name="recur" value="monthly"> חודשי</label>
-          <label><input type="radio" id="yearly" name="recur" value="yearly"> שנתי</label>
+          <label><input type="radio" id="once" name="recur" value="none" checked> <span data-i18n="once">ללא (חד־פעמי)</span></label>
+          <label><input type="radio" id="minutely" name="recur" value="minutely"> <span data-i18n="minutely">כל דקה</span></label>
+          <label><input type="radio" id="daily" name="recur" value="daily"> <span data-i18n="daily">יומי</span></label>
+          <label><input type="radio" id="weekly" name="recur" value="weekly"> <span data-i18n="weekly">שבועי</span></label>
+          <label><input type="radio" id="monthly" name="recur" value="monthly"> <span data-i18n="monthly">חודשי</span></label>
+          <label><input type="radio" id="yearly" name="recur" value="yearly"> <span data-i18n="yearly">שנתי</span></label>
           <label id="function-recur-radio">
-            <input type="radio" id="function" name="recur" value="function"> פונקציה
+            <input type="radio" id="function" name="recur" value="function"> <span data-i18n="function">פונקציה</span>
             <select id="recurFuncSelect"></select>
-            <div id="showHideFunctionHelp">(הסבר על הפונקציה)</div>
+            <div id="showHideFunctionHelp" data-i18n="funcHelp">(הסבר על הפונקציה)</div>
             <div id="funcHelpDiv"></div>
           </label>
         </div>
 
         <div id="recurrence-spec">
           <div id="recur-time-args-div">
-            <span>כל</span>
+            <span data-i18n="every">כל</span>
             <input type="number" id="recur-multiplier" value="1" min="1">
             <span id="recurperiod_plural">ימים</span>
           </div>
@@ -370,32 +396,32 @@
             <input type="checkbox" id="recur-monthly-byweek">
             <span id="recur-monthly-byweek-options">
               <select id="recur-monthly-byweek-week">
-                <option value="1">הראשון</option>
-                <option value="2">השני</option>
-                <option value="3">השלישי</option>
-                <option value="4">הרביעי</option>
-                <option value="5">החמישי</option>
+                <option value="1" data-i18n="week1">הראשון</option>
+                <option value="2" data-i18n="week2">השני</option>
+                <option value="3" data-i18n="week3">השלישי</option>
+                <option value="4" data-i18n="week4">הרביעי</option>
+                <option value="5" data-i18n="week5">החמישי</option>
               </select>
               <select id="recur-monthly-byweek-day">
-                <option value="0">ביום ראשון</option>
-                <option value="1">ביום שני</option>
-                <option value="2">ביום שלישי</option>
-                <option value="3">ביום רביעי</option>
-                <option value="4">ביום חמישי</option>
-                <option value="5">ביום שישי</option>
-                <option value="6">בשבת</option>
+                <option value="0" data-i18n="onSun">ביום ראשון</option>
+                <option value="1" data-i18n="onMon">ביום שני</option>
+                <option value="2" data-i18n="onTue">ביום שלישי</option>
+                <option value="3" data-i18n="onWed">ביום רביעי</option>
+                <option value="4" data-i18n="onThu">ביום חמישי</option>
+                <option value="5" data-i18n="onFri">ביום שישי</option>
+                <option value="6" data-i18n="onSat">בשבת</option>
               </select>
-              <span>של כל חודש</span>
+              <span data-i18n="ofEveryMonth">של כל חודש</span>
             </span>
           </div>
           <div id="recur-function-args-div">
             <label>
-              <span>ארגומנטים לפונקציה:</span>
+              <span data-i18n="funcArgs">ארגומנטים לפונקציה:</span>
               <input type="text" id="recur-function-args" dir="ltr">
             </label>
           </div>
-          <div id="cancel-on-reply-div" title="הפסק את החזרה ברגע שמתקבלת תשובה להודעה">
-            <label><input type="checkbox" id="recur-cancelonreply"> בטל את החזרה כשמתקבלת תשובה</label>
+          <div id="cancel-on-reply-div" data-i18n-title="cancelOnReplyTitle" title="הפסק את החזרה ברגע שמתקבלת תשובה להודעה">
+            <label><input type="checkbox" id="recur-cancelonreply"> <span data-i18n="cancelOnReply">בטל את החזרה כשמתקבלת תשובה</span></label>
           </div>
         </div>
       </div>
@@ -403,7 +429,7 @@
       <div id="recur-limits">
         <div class="adv-section" id="section-between">
           <div class="inline">
-            <label><input type="checkbox" id="sendbetween"> רק בין השעות</label>
+            <label><input type="checkbox" id="sendbetween"> <span data-i18n="between">רק בין השעות</span></label>
             <span id="betweenDiv">
               <input id="sendbetween-start" type="time" value="09:00">
               –
@@ -414,22 +440,22 @@
 
         <div class="adv-section" id="section-only-on-days">
           <div class="inline">
-            <label><input type="checkbox" id="sendon"> רק בימים</label>
+            <label><input type="checkbox" id="sendon"> <span data-i18n="onlyOn">רק בימים</span></label>
           </div>
           <div class="days" id="onlyOnDiv">
-            <label><input type="checkbox" name="weekdayChecks" id="sendon-sunday" checked> א׳</label>
-            <label><input type="checkbox" name="weekdayChecks" id="sendon-monday" checked> ב׳</label>
-            <label><input type="checkbox" name="weekdayChecks" id="sendon-tuesday" checked> ג׳</label>
-            <label><input type="checkbox" name="weekdayChecks" id="sendon-wednesday" checked> ד׳</label>
-            <label><input type="checkbox" name="weekdayChecks" id="sendon-thursday" checked> ה׳</label>
-            <label><input type="checkbox" name="weekdayChecks" id="sendon-friday"> ו׳</label>
-            <label><input type="checkbox" name="weekdayChecks" id="sendon-saturday"> ש׳</label>
+            <label><input type="checkbox" name="weekdayChecks" id="sendon-sunday" checked> <span data-i18n="sun">א׳</span></label>
+            <label><input type="checkbox" name="weekdayChecks" id="sendon-monday" checked> <span data-i18n="mon">ב׳</span></label>
+            <label><input type="checkbox" name="weekdayChecks" id="sendon-tuesday" checked> <span data-i18n="tue">ג׳</span></label>
+            <label><input type="checkbox" name="weekdayChecks" id="sendon-wednesday" checked> <span data-i18n="wed">ד׳</span></label>
+            <label><input type="checkbox" name="weekdayChecks" id="sendon-thursday" checked> <span data-i18n="thu">ה׳</span></label>
+            <label><input type="checkbox" name="weekdayChecks" id="sendon-friday"> <span data-i18n="fri">ו׳</span></label>
+            <label><input type="checkbox" name="weekdayChecks" id="sendon-saturday"> <span data-i18n="sat">ש׳</span></label>
           </div>
         </div>
 
         <div class="adv-section" id="section-until">
           <div class="inline">
-            <label><input type="checkbox" id="senduntil"> עד לתאריך</label>
+            <label><input type="checkbox" id="senduntil"> <span data-i18n="until">עד לתאריך</span></label>
             <span id="untilDiv">
               <input id="senduntil-date" type="date">
               <input id="senduntil-time" type="time" value="23:59">
@@ -439,13 +465,14 @@
       </div>
 
       <div class="defaults">
-        <label><input type="button" id="save-defaults" value="שמור את הערכים כברירת מחדל"></label>
-        <label><input type="button" id="clear-defaults" value="נקה ברירות מחדל"></label>
+        <label><input type="button" id="save-defaults" data-i18n-value="saveDefaults" value="שמור את הערכים כברירת מחדל"></label>
+        <label><input type="button" id="clear-defaults" data-i18n-value="clearDefaults" value="נקה ברירות מחדל"></label>
       </div>
     </details>
 
     <script type="text/javascript" src="/utils/sugar-custom.js"></script>
     <script type="text/javascript" src="/utils/tools.js"></script>
+    <script type="text/javascript" src="/ui/aag-i18n.js"></script>
     <script type="text/javascript" src="/ui/popup.js"></script>
   </body>
 </html>

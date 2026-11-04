@@ -124,22 +124,9 @@ function aagChipDate(chip) {
   return date;
 }
 
-// "בעוד 5 דקות" etc. for the schedule button (Sugar's relative text is English).
+// "in 5 minutes" / "בעוד 5 דקות" in the window's language (aag-i18n.js).
 function aagRelative(date) {
-  const seconds = Math.round((date.getTime() - Date.now()) / 1000);
-  if (seconds < 60) {
-    return "בעוד פחות מדקה";
-  }
-  const minutes = Math.round(seconds / 60);
-  if (minutes < 60) {
-    return minutes === 1 ? "בעוד דקה" : minutes === 2 ? "בעוד שתי דקות" : `בעוד ${minutes} דקות`;
-  }
-  const hours = Math.round(minutes / 60);
-  if (hours < 24) {
-    return hours === 1 ? "בעוד שעה" : hours === 2 ? "בעוד שעתיים" : `בעוד ${hours} שעות`;
-  }
-  const days = Math.round(hours / 24);
-  return days === 1 ? "מחר" : days === 2 ? "בעוד יומיים" : `בעוד ${days} ימים`;
+  return AAGI18N.relative(date);
 }
 
 // Replaces the "(in 5 minutes)" part of the first line of the schedule text.
@@ -459,7 +446,7 @@ const SLPopup = {
     }
 
     if (!schedule.sendAt) {
-      return { err: browser.i18n.getMessage("entervalid") };
+      return { err: AAGI18N.t("entervalid") };
     }
 
     if (SLTools.compareDateTimes(schedule.sendAt, "<", new Date(), true)) {
@@ -705,7 +692,7 @@ const SLPopup = {
     } catch (ex) {
       SLTools.debug(ex);
     }
-    sendScheduleButton.textContent = browser.i18n.getMessage("entervalid");
+    sendScheduleButton.textContent = AAGI18N.t("entervalid");
     sendScheduleButton.disabled = true;
     return false;
   },
@@ -1142,38 +1129,40 @@ const SLPopup = {
       }
     });
 
-    (() => {
-      const label = browser.i18n.getMessage("sendNowLabel");
-      const accessKey = browser.i18n.getMessage(
-        "sendlater.prompt.sendnow.accesskey",
-      );
-      const contents = underlineAccessKey(label, accessKey);
-
-      dom["sendNow"].accessKey = accessKey;
-      SLPopup.sendNowCode = `Key${accessKey.toUpperCase()}`;
-      dom["sendNow"].textContent = "";
-      for (let span of contents) {
-        dom["sendNow"].appendChild(span);
-      }
-    })();
-    (() => {
-      const label = browser.i18n.getMessage(
-        "sendlater.prompt.sendlater.label",
-      );
-      const accessKey = browser.i18n.getMessage(
-        "sendlater.prompt.sendlater.accesskey",
-      );
-      const contents = underlineAccessKey(label, accessKey);
-
-      dom["placeInOutbox"].accessKey = accessKey;
-      SLPopup.placeInOutboxCode = `Key${accessKey.toUpperCase()}`;
-      dom["placeInOutbox"].textContent = "";
-      for (let span of contents) {
-        dom["placeInOutbox"].appendChild(span);
-      }
-    })();
+    SLPopup.aagSecondaryLabels();
+    for (const btn of document.querySelectorAll("#aag-lang button")) {
+      btn.addEventListener("click", async () => {
+        await AAGI18N.setLang(btn.dataset.lang);
+        SLPopup.aagSecondaryLabels();
+        // Re-evaluate so the schedule button's relative time changes language.
+        dom["send-time"].dispatchEvent(new Event("change"));
+      });
+    }
 
     setTimeout(() => document.getElementById("sendScheduleButton").focus(), 50);
+  },
+
+  // AAG: "send now" / "outbox" labels in the window's language; the access
+  // keys stay upstream's (from the Thunderbird locale) so shortcuts still work.
+  aagSecondaryLabels() {
+    const dom = SLPopup.objectifyDOMElements();
+    const set = (id, labelKey, accessKeyMsg, codeProp) => {
+      const accessKey = browser.i18n.getMessage(accessKeyMsg);
+      const contents = underlineAccessKey(AAGI18N.t(labelKey), accessKey);
+      dom[id].accessKey = accessKey;
+      SLPopup[codeProp] = `Key${accessKey.toUpperCase()}`;
+      dom[id].textContent = "";
+      for (let span of contents) {
+        dom[id].appendChild(span);
+      }
+    };
+    set("sendNow", "sendNow", "sendlater.prompt.sendnow.accesskey", "sendNowCode");
+    set(
+      "placeInOutbox",
+      "placeInOutbox",
+      "sendlater.prompt.sendlater.accesskey",
+      "placeInOutboxCode",
+    );
   },
 
   // AAG: a chip fills the date/time pickers; the regular change handling then
@@ -1212,6 +1201,7 @@ const SLPopup = {
   async init() {
     await SLTools.cachePrefs();
     SLTools.trace("SLPopup.init", window.location);
+    await AAGI18N.init();
 
     // This happens asynchronously in tools.js, but we need to make sure
     // prefs are available, so let's just make sure.
