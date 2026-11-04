@@ -1130,14 +1130,12 @@ const SLPopup = {
     });
 
     SLPopup.aagSecondaryLabels();
-    for (const btn of document.querySelectorAll("#aag-lang button")) {
-      btn.addEventListener("click", async () => {
-        await AAGI18N.setLang(btn.dataset.lang);
-        SLPopup.aagSecondaryLabels();
-        // Re-evaluate so the schedule button's relative time changes language.
-        dom["send-time"].dispatchEvent(new Event("change"));
-      });
-    }
+    document.getElementById("aag-lang").addEventListener("change", async (e) => {
+      await AAGI18N.setLang(e.target.value);
+      SLPopup.aagSecondaryLabels();
+      // Re-evaluate so the schedule button's relative time changes language.
+      dom["send-time"].dispatchEvent(new Event("change"));
+    });
 
     setTimeout(() => document.getElementById("sendScheduleButton").focus(), 50);
   },

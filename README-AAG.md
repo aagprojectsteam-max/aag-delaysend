@@ -28,11 +28,11 @@ and the add-on identity changed.
   the quick-option loop skips the (removed) quick buttons; `stateSetter`
   no longer forces black text (dark theme); focus lands on the schedule
   button instead of the text field.
-- `ui/aag-i18n.js` (10.7.8.1): the popup's own Hebrew/English dictionary.
-  A small עברית / English switch in the popup header picks the language and
-  direction; the choice is stored in `browser.storage.local` (`aagLang`).
-  Without a choice the window follows Thunderbird's UI language (Hebrew →
-  Hebrew, anything else → English). Texts come from `data-i18n`,
+- `ui/aag-i18n.js` (10.7.8.1, dropdown since 10.7.8.2): the popup's own
+  Hebrew/English dictionary. A language dropdown (English / עברית) in the
+  popup header picks the language and direction; the last choice is stored
+  in `browser.storage.local` (`aagLang`) and used on every later open. The
+  default is English. Texts come from `data-i18n`,
   `data-i18n-value` and `data-i18n-title` attributes; "send now", "outbox",
   "enter a valid date" and the relative time are set from the same table
   (the access keys stay upstream's, from the Thunderbird locale). The "Send
@@ -42,7 +42,7 @@ and the add-on identity changed.
 ## Build
 
 ```bash
-cd /mnt/data/MyProjects/AAG-DelaySend && mkdir -p dist && zip -qr dist/aag-delaysend-10.7.8.1.xpi _locales experiments ui utils background.js manifest.json -x '*.tmp'
+cd /mnt/data/MyProjects/AAG-DelaySend && mkdir -p dist && zip -qr dist/aag-delaysend-10.7.8.2.xpi _locales experiments ui utils background.js manifest.json -x '*.tmp'
 ```
 
 Checks before building: `node --check ui/popup.js`, and every

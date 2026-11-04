@@ -2,10 +2,10 @@
 // with a user-selectable language, independent of Thunderbird's UI locale.
 // Elements opt in with data-i18n (textContent), data-i18n-value (value) or
 // data-i18n-title (title). The choice is stored in browser.storage.local
-// under "aagLang"; without one, Thunderbird's UI language decides.
+// under "aagLang" and reused next time; the default is English.
 
 const AAGI18N = {
-  lang: "he",
+  lang: "en",
 
   strings: {
     he: {
@@ -156,17 +156,14 @@ const AAGI18N = {
   },
 
   async init() {
-    let { aagLang } = await browser.storage.local.get({ aagLang: "" });
-    if (!aagLang) {
-      const ui = (browser.i18n.getUILanguage() || "").toLowerCase();
-      aagLang = ui.startsWith("he") || ui.startsWith("iw") ? "he" : "en";
-    }
-    AAGI18N.lang = aagLang === "en" ? "en" : "he";
+    // English unless the user picked Hebrew before; the last choice is kept.
+    const { aagLang } = await browser.storage.local.get({ aagLang: "en" });
+    AAGI18N.lang = aagLang === "he" ? "he" : "en";
     AAGI18N.apply();
   },
 
   async setLang(lang) {
-    AAGI18N.lang = lang === "en" ? "en" : "he";
+    AAGI18N.lang = lang === "he" ? "he" : "en";
     await browser.storage.local.set({ aagLang: AAGI18N.lang });
     AAGI18N.apply();
   },
@@ -186,8 +183,9 @@ const AAGI18N = {
     for (const el of document.querySelectorAll("[data-i18n-title]")) {
       el.title = AAGI18N.t(el.dataset.i18nTitle);
     }
-    for (const btn of document.querySelectorAll("#aag-lang button")) {
-      btn.classList.toggle("active", btn.dataset.lang === AAGI18N.lang);
+    const select = document.getElementById("aag-lang");
+    if (select) {
+      select.value = AAGI18N.lang;
     }
   },
 };
