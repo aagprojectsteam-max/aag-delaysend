@@ -14,7 +14,8 @@ function stateSetter(enabled) {
   return async (element) => {
     try {
       if (["SPAN", "DIV", "LABEL"].includes(element.tagName)) {
-        element.style.color = enabled ? "black" : "#888888";
+        // AAG: inherit the theme colour instead of forcing black (dark mode).
+        element.style.color = enabled ? "" : "#888888";
       }
       element.disabled = !enabled;
     } catch (ex) {
@@ -91,6 +92,65 @@ function parseableHumanDateTimeFormat(date) {
     return formatted;
   }
   return date.toISOString();
+}
+
+// AAG DelaySend additions: quick chips that fill the date/time pickers, a Hebrew
+// relative time on the schedule button, and the collapsible advanced section.
+function aagPad(n) {
+  return String(n).padStart(2, "0");
+}
+
+// The date/time a quick chip stands for. data-minutes: that many minutes from
+// now, rounded up to a whole minute so the send never lands early. data-day
+// ("tomorrow" or a weekday number) + data-time: the next such day, never today.
+function aagChipDate(chip) {
+  const now = new Date();
+  if (chip.dataset.minutes) {
+    const minutes = parseInt(chip.dataset.minutes);
+    return new Date(Math.ceil((now.getTime() + minutes * 60000) / 60000) * 60000);
+  }
+  const [hours, minutes] = chip.dataset.time.split(":").map(Number);
+  const date = new Date(now);
+  date.setHours(hours, minutes, 0, 0);
+  if (chip.dataset.day === "tomorrow") {
+    date.setDate(date.getDate() + 1);
+  } else {
+    let ahead = (parseInt(chip.dataset.day) - date.getDay() + 7) % 7;
+    if (ahead === 0) {
+      ahead = 7;
+    }
+    date.setDate(date.getDate() + ahead);
+  }
+  return date;
+}
+
+// "בעוד 5 דקות" etc. for the schedule button (Sugar's relative text is English).
+function aagRelative(date) {
+  const seconds = Math.round((date.getTime() - Date.now()) / 1000);
+  if (seconds < 60) {
+    return "בעוד פחות מדקה";
+  }
+  const minutes = Math.round(seconds / 60);
+  if (minutes < 60) {
+    return minutes === 1 ? "בעוד דקה" : minutes === 2 ? "בעוד שתי דקות" : `בעוד ${minutes} דקות`;
+  }
+  const hours = Math.round(minutes / 60);
+  if (hours < 24) {
+    return hours === 1 ? "בעוד שעה" : hours === 2 ? "בעוד שעתיים" : `בעוד ${hours} שעות`;
+  }
+  const days = Math.round(hours / 24);
+  return days === 1 ? "מחר" : days === 2 ? "בעוד יומיים" : `בעוד ${days} ימים`;
+}
+
+// Replaces the "(in 5 minutes)" part of the first line of the schedule text.
+function aagHebrewRelative(scheduleText, sendAt) {
+  if (!sendAt || !sendAt.getTime) {
+    return scheduleText;
+  }
+  return scheduleText.replace(
+    /^([^\n]*?)\s*\([^()\n]*\)/,
+    (match, head) => `${head} (${aagRelative(sendAt)})`,
+  );
 }
 
 // initialize popup window
@@ -605,11 +665,12 @@ const SLPopup = {
     }
 
     try {
-      const scheduleText = SLTools.formatScheduleForUI(
+      let scheduleText = SLTools.formatScheduleForUI(
         schedule,
         SLPopup.previousLoop,
         SLPopup.loopMinutes,
       );
+      scheduleText = aagHebrewRelative(scheduleText, schedule.sendAt);
       if (scheduleText) {
         sendScheduleButton.textContent = "";
         scheduleText.split("\n").forEach((segment) => {
@@ -883,6 +944,8 @@ const SLPopup = {
   attachListeners() {
     const dom = SLPopup.objectifyDOMElements();
 
+    SLPopup.attachChips();
+
     let priorInputs = undefined;
 
     const onInput = (evt) => {
@@ -999,6 +1062,10 @@ const SLPopup = {
       for (let i = 1; i < 4; i++) {
         const funcName = preferences[`quickOptions${i}funcselect`];
         const quickBtn = dom[`quick-opt-${i}`];
+        if (!quickBtn) {
+          // AAG DelaySend has no quick-option buttons (the chips replace them).
+          continue;
+        }
         if (!funcName) {
           quickBtn.parentElement.remove();
           continue;
@@ -1106,7 +1173,40 @@ const SLPopup = {
       }
     })();
 
-    setTimeout(() => document.getElementById("send-datetime").select(), 50);
+    setTimeout(() => document.getElementById("sendScheduleButton").focus(), 50);
+  },
+
+  // AAG: a chip fills the date/time pickers; the regular change handling then
+  // writes send-datetime and evaluates the schedule, exactly as a manual pick.
+  attachChips() {
+    const dom = SLPopup.objectifyDOMElements();
+    for (const chip of document.querySelectorAll("#aag-chips .chip")) {
+      chip.addEventListener("click", () => {
+        const date = aagChipDate(chip);
+        dom["send-date"].value =
+          `${date.getFullYear()}-${aagPad(date.getMonth() + 1)}-${aagPad(date.getDate())}`;
+        dom["send-time"].value = `${aagPad(date.getHours())}:${aagPad(date.getMinutes())}`;
+        dom["send-time"].dispatchEvent(new Event("change"));
+      });
+    }
+  },
+
+  // AAG: open the advanced section when saved defaults or the cached schedule
+  // of this compose window use anything beyond a one-time send.
+  syncAdvanced() {
+    const dom = SLPopup.objectifyDOMElements();
+    const advanced = dom["aag-advanced"];
+    if (!advanced) {
+      return;
+    }
+    const inUse =
+      !dom["once"].checked ||
+      dom["sendbetween"].checked ||
+      dom["sendon"].checked ||
+      dom["senduntil"].checked;
+    if (inUse) {
+      advanced.open = true;
+    }
   },
 
   async init() {
@@ -1175,6 +1275,7 @@ const SLPopup = {
     }
 
     await SLPopup.applyDefaults();
+    SLPopup.syncAdvanced();
 
     SLPopup.restoreZoom();
     SLPopup.initialized = true;

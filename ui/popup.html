@@ -1,349 +1,451 @@
 <!DOCTYPE html>
-<html>
+<html dir="rtl" lang="he">
   <head>
-    <title>__MSG_extensionName__</title>
+    <title>AAG DelaySend</title>
     <meta charset="utf-8">
-    <script src="/utils/i18n.js"></script>
+    <!--
+      AAG DelaySend popup. The element ids are the contract with popup.js and the
+      Send Later engine (background.js): keep every id, change the layout freely.
+    -->
     <style>
+      :root {
+        color-scheme: light dark;
+        --bg: #f4f5f8;
+        --card: #ffffff;
+        --text: #1b1f27;
+        --muted: #5e6675;
+        --line: #d9dce3;
+        --accent: #1f5fd6;
+        --accent-text: #ffffff;
+        --chip: #e9eef9;
+        --chip-text: #1f3f86;
+        --chip-hover: #d7e2fa;
+        --field: #ffffff;
+        --shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #1e2027;
+          --card: #2a2d36;
+          --text: #eceef3;
+          --muted: #a4abb8;
+          --line: #3d414c;
+          --accent: #5b8def;
+          --accent-text: #0e1626;
+          --chip: #343947;
+          --chip-text: #cdd9f5;
+          --chip-hover: #40475a;
+          --field: #22252d;
+          --shadow: none;
+        }
+      }
+
+      * { box-sizing: border-box; }
+
       body {
-        font-family: sans-serif;
-        vertical-align: middle;
-        padding: 1em 0.5em;
+        margin: 0;
+        padding: 14px 14px 12px;
+        min-width: 380px;
+        max-width: 460px;
+        background: var(--bg);
+        color: var(--text);
+        font-family: system-ui, "Segoe UI", "Noto Sans Hebrew", Arial, sans-serif;
+        font-size: 14px;
+        line-height: 1.4;
+        direction: rtl;
+        text-align: right;
       }
 
-      #sendNow {
-        float: left;
-        margin-left: 2%;
-        width: 45%;
-        padding:0.25em;
+      header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 10px;
+      }
+      header img { width: 28px; height: 28px; }
+      header h1 {
+        margin: 0;
+        font-size: 16px;
+        font-weight: 600;
+      }
+      header .sub {
+        margin: 0;
+        color: var(--muted);
+        font-size: 12px;
       }
 
-      #cancel {
-        float: right;
-        margin-right: 2%;
-        width: 45%;
-        padding:0.25em;
+      .card {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 12px;
+        box-shadow: var(--shadow);
+        margin-bottom: 10px;
+      }
+      .card-title {
+        font-size: 12.5px;
+        font-weight: 600;
+        color: var(--muted);
+        margin: 0 0 8px;
       }
 
-      #save-defaults, #clear-defaults {
-        background: none!important;
-        border: none;
-        padding: 0!important;
-        color: #069;
-        text-decoration: underline;
+      .pickers {
+        display: flex;
+        gap: 8px;
+      }
+      .pickers input {
+        flex: 1 1 0;
+        min-width: 0;
+        height: 36px;
+        font-size: 15px;
+        font-family: inherit;
+        padding: 4px 8px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--field);
+        color: var(--text);
+      }
+      .pickers input:focus,
+      .freetext input:focus {
+        outline: 2px solid var(--accent);
+        outline-offset: 1px;
+        border-color: transparent;
+      }
+      #send-date { flex: 1.4 1 0; }
+
+      .chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 10px;
+      }
+      .chip {
+        border: 0;
+        border-radius: 999px;
+        background: var(--chip);
+        color: var(--chip-text);
+        font: inherit;
+        font-size: 12.5px;
+        padding: 5px 11px;
         cursor: pointer;
       }
+      .chip:hover { background: var(--chip-hover); }
 
-      #showHideFunctionHelp {
-        display:none;
-        font-size:small;
-        font-family:monospace;
-        color: blue;
-        text-decoration: underline;
+      .freetext {
+        margin-top: 8px;
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .freetext summary { cursor: pointer; }
+      .freetext input {
+        width: 100%;
+        margin-top: 6px;
+        direction: ltr;
+        text-align: left;
+        height: 30px;
+        font-family: inherit;
+        font-size: 13px;
+        padding: 3px 8px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--field);
+        color: var(--text);
+      }
+
+      #sendScheduleButton {
+        width: 100%;
+        min-height: 48px;
+        padding: 8px 12px;
+        border: 0;
+        border-radius: 10px;
+        background: var(--accent);
+        color: var(--accent-text);
+        font: inherit;
+        font-size: 15px;
+        font-weight: 600;
         cursor: pointer;
       }
-
-      #funcHelpDiv {
-        display:none;
-        font-size:small;
-        font-family:monospace;
-        border:1px solid #ccc;
-        padding:0.5em;
-        margin-top:0.5em;
-        white-space:normal;
+      #sendScheduleButton:hover { filter: brightness(1.07); }
+      #sendScheduleButton:disabled {
+        background: var(--line);
+        color: var(--muted);
+        cursor: default;
+        font-weight: 500;
+      }
+      #sendScheduleButton div + div {
+        font-weight: 400;
+        font-size: 12.5px;
+        opacity: 0.9;
       }
 
-      input[type=text] {
-        padding: 3pt 2pt;
+      .secondary {
+        display: flex;
+        gap: 8px;
+        margin: 8px 0 10px;
       }
-
-      button, input[type=button] {
-        text-align:center;
-        padding:0.2em;
+      .secondary button {
+        flex: 1 1 0;
+        height: 34px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--card);
+        color: var(--text);
+        font: inherit;
+        font-size: 13px;
+        cursor: pointer;
       }
+      .secondary button:hover { background: var(--chip); }
 
-      section {
-        padding: 0.5em 0.25em 0.5em 0em;
+      details.advanced {
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: var(--card);
+        padding: 0 12px;
       }
+      details.advanced > summary {
+        cursor: pointer;
+        padding: 9px 0;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--muted);
+        list-style: none;
+      }
+      details.advanced > summary::-webkit-details-marker { display: none; }
+      details.advanced > summary::before {
+        content: "▸";
+        display: inline-block;
+        margin-inline-end: 6px;
+        transition: transform 0.15s;
+      }
+      details.advanced[open] > summary::before { transform: rotate(90deg); }
+      details.advanced[open] > summary { border-bottom: 1px solid var(--line); }
 
-      label {
+      .adv-section {
+        padding: 10px 0;
+        border-bottom: 1px solid var(--line);
+      }
+      .adv-section:last-child { border-bottom: 0; }
+      .adv-title {
+        font-size: 12.5px;
+        font-weight: 600;
+        margin: 0 0 6px;
+      }
+      .radios, .days {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px 12px;
+      }
+      .radios label, .days label, .inline label {
         white-space: nowrap;
+        cursor: pointer;
       }
-
-      .div-table {
-        display: table;
-        width:auto;
+      .inline {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 6px 8px;
+        margin-top: 6px;
       }
-
-      .div-table-row {
-        display: table-row;
-        width: auto;
-        clear: both;
+      input[type="time"], input[type="date"], input[type="number"], select, input[type="text"] {
+        font-family: inherit;
+        font-size: 13px;
+        padding: 3px 6px;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        background: var(--field);
+        color: var(--text);
       }
-
-      .div-table-cell {
-        display: table-cell;
-        padding:0.1em;
-        padding-right: 1em;
+      input[type="number"] { width: 4.5em; }
+      #recurrence-spec {
+        display: none;
+        margin-top: 8px;
+        padding-inline-start: 22px;
       }
+      #recurrence-spec > div { margin-top: 4px; }
+      #showHideFunctionHelp {
+        display: none;
+        font-size: 12px;
+        color: var(--accent);
+        text-decoration: underline;
+        cursor: pointer;
+      }
+      #funcHelpDiv {
+        display: none;
+        direction: ltr;
+        text-align: left;
+        font-size: 12px;
+        font-family: monospace;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        padding: 6px;
+        margin-top: 6px;
+        white-space: normal;
+      }
+      .defaults {
+        display: flex;
+        justify-content: space-between;
+        gap: 8px;
+        padding: 8px 0 10px;
+        font-size: 12px;
+      }
+      .defaults input[type="button"] {
+        background: none;
+        border: 0;
+        padding: 0;
+        color: var(--accent);
+        text-decoration: underline;
+        cursor: pointer;
+        font: inherit;
+        font-size: 12px;
+      }
+      .success_icon { margin-inline-start: 4px; }
     </style>
   </head>
 
-  <body style="padding:1em;">
-    <section style="display:block;" id="sendAtTimeDateDiv">
-      <div class="div-table">
-        <div class="div-table-row">
-          <div class="div-table-cell"
-                style="white-space: nowrap">
-             __MSG_sendAtLabel__
-          </div>
-          <div class="div-table-cell" style="width:100%">
-            <input id="send-datetime" type="text" style="width:100%"
-              value="__MSG_sendAtDefaultLabel__"/>
-          </div>
-        </div>
-        <div class="div-table-row">
-          <div class="div-table-cell"></div>
-          <div class="div-table-cell">
-            <input id="send-date" type="date"/>
-            <input id="send-time" type="time"/>
-          </div>
-        </div>
+  <body>
+    <header>
+      <img src="/ui/icons/icon.png" alt="">
+      <div>
+        <h1>AAG DelaySend</h1>
+        <p class="sub">שליחה מתוזמנת — ההודעה נשמרת בטיוטות ונשלחת כש־Thunderbird פתוח</p>
       </div>
+    </header>
+
+    <section class="card" id="sendAtTimeDateDiv">
+      <p class="card-title">מתי לשלוח</p>
+      <div class="pickers">
+        <input id="send-date" type="date">
+        <input id="send-time" type="time">
+      </div>
+      <div class="chips" id="aag-chips">
+        <button type="button" class="chip" data-minutes="15">בעוד 15 דק׳</button>
+        <button type="button" class="chip" data-minutes="30">בעוד 30 דק׳</button>
+        <button type="button" class="chip" data-minutes="60">בעוד שעה</button>
+        <button type="button" class="chip" data-minutes="120">בעוד שעתיים</button>
+        <button type="button" class="chip" data-day="tomorrow" data-time="09:00">מחר 09:00</button>
+        <button type="button" class="chip" data-day="0" data-time="09:00">יום א׳ 09:00</button>
+      </div>
+      <details class="freetext" id="aag-freetext">
+        <summary>זמן בטקסט חופשי (באנגלית, למשל tomorrow at 9am)</summary>
+        <input id="send-datetime" type="text" dir="ltr">
+      </details>
     </section>
 
-    <section style="display:block;">
-      <div style="display: table-row;">
-        <div style="display: table-cell;">
-          <span style="margin-right:0.5em;">__MSG_recurLabel__</span>
-        </div>
-        <div style="display: table-cell;">
-          <label>
-            <input type="radio" id="once" name="recur" value="none" checked/>
-            <span>__MSG_recurOnceLabel__</span>
-          </label>
-          <label>
-            <input type="radio" id="minutely" name="recur" value="minutely"/>
-            <span>__MSG_recurMinutelyLabel__</span>
-          </label>
-          <label>
-            <input type="radio" id="daily" name="recur" value="daily"/>
-            <span>__MSG_recurDailyLabel__</span>
-          </label>
-          <label>
-            <input type="radio" id="weekly" name="recur" value="weekly"/>
-            <span>__MSG_recurWeeklyLabel__</span>
-          </label>
-          <label>
-            <input type="radio" id="monthly" name="recur" value="monthly"/>
-            <span>__MSG_recurMonthlyLabel__</span>
-          </label>
-          <label>
-            <input type="radio" id="yearly" name="recur" value="yearly"/>
-            <span>__MSG_recurAnnuallyLabel__</span>
-          </label>
-          <br/>
-          <label id="function-recur-radio">
-            <input type="radio" id="function" name="recur" value="function"/>
-            <span>__MSG_recurFunctionLabel__</span>
-            <select id="recurFuncSelect">
-            </select>
-            <div id="showHideFunctionHelp">
-              (<span>__MSG_helptextheader__</span>)
-            </div>
-            <div id="funcHelpDiv"></div>
-          </label>
+    <button id="sendScheduleButton" disabled title="Ctrl+Enter / Enter">
+      הזן תאריך תקף
+    </button>
 
-          <div id="recurrence-spec" style="display:none;margin-top:0.5em;">
-            <div id="recur-time-args-div" style="margin-left:2em;">
-              <!-- <input type="radio" name="monthly-recur-type" id='recur-multiply'
-                    style="margin-left:1em;" value='recur-multiply' checked/> -->
-              <span>__MSG_sendlater.prompt.every.label__</span>
-              <input type="number" id="recur-multiplier" value="1" min="1" style="width:5em;"/>
-              <span id="recurperiod_plural">days</span>
-            </div>
-            <div id="monthly-options-div" style="margin-left:2em;">
-              <div style="display: table-row;">
-                <div style="display: table-cell;white-space:nowrap;">
-                  <input type="checkbox" id='recur-monthly-byweek'/>
-                </div>
-                <div style="display: table-cell;" id="recur-monthly-byweek-options">
-                  <select id="recur-monthly-byweek-week" style="margin:0.15em;">
-                    <option value="1" class="option-label">__MSG_ord1__</option>
-                    <option value="2" class="option-label">__MSG_ord2__</option>
-                    <option value="3" class="option-label">__MSG_ord3__</option>
-                    <option value="4" class="option-label">__MSG_ord4__</option>
-                    <option value="5" class="option-label">__MSG_ord5__</option>
-                  </select>
-                  <select id="recur-monthly-byweek-day" style="margin:0.15em;">
-                    <option value="0" class="option-label">__MSG_everymonthly_day0__</option>
-                    <option value="1" class="option-label">__MSG_everymonthly_day1__</option>
-                    <option value="2" class="option-label">__MSG_everymonthly_day2__</option>
-                    <option value="3" class="option-label">__MSG_everymonthly_day3__</option>
-                    <option value="4" class="option-label">__MSG_everymonthly_day4__</option>
-                    <option value="5" class="option-label">__MSG_everymonthly_day5__</option>
-                    <option value="6" class="option-label">__MSG_everymonthly_day6__</option>
-                  </select>
-                  <span>__MSG_everymonthly__</span>
-                </div>
-              </div>
-            </div>
-            <div id="recur-function-args-div">
-              <label>
-                <span>__MSG_sendlater.prompt.functionargs.label__</span>
-                <input type="text" id="recur-function-args"/>
-              </label>
-            </div>
-            <div id="cancel-on-reply-div" style="margin-top:0.25em;"
-                 title="__MSG_sendlater.prompt.cancelonreply.tooltip__">
-              <label>
-                <input type="checkbox" id="recur-cancelonreply"/>
-                <span>__MSG_sendlater.prompt.cancelonreply.label__</span>
-              </label>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <div id="recur-limits">
-    <section style="display:block;" id="section-between">
-      <div style="display: table-row;">
-        <div style="display: table-cell;white-space:nowrap;">
-          <label style="margin-right:0.5em;">
-            <input type="checkbox" id="sendbetween"/>
-            <span>__MSG_sendBtwnLabel__</span>
-          </label>
-        </div>
-        <div id="betweenDiv">
-          <div style="display: table-cell;">
-            <input id="sendbetween-start" type="time" value="09:00"/>
-            -
-            <input id="sendbetween-end" type="time" value="17:00"/>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section style="display:block;" id="section-only-on-days">
-      <div style="display: table-row;">
-        <div style="display: table-cell;white-space:nowrap;">
-          <label>
-            <input type="checkbox" id="sendon"/>
-            <span>__MSG_sendOnlyOnLabel__</span>
-          </label>
-        </div>
-        <div style="display: table-cell;" id="onlyOnDiv">
-          <label>
-            <input type="checkbox" name="weekdayChecks" id="sendon-sunday"/>
-            <span>__MSG_sendSundayLabel__</span>
-          </label>
-          <label>
-            <input type="checkbox" name="weekdayChecks" id="sendon-monday" checked/>
-            <span>__MSG_sendMondayLabel__</span>
-          </label>
-          <label>
-            <input type="checkbox" name="weekdayChecks" id="sendon-tuesday" checked/>
-            <span>__MSG_sendTuesdayLabel__</span>
-          </label>
-          <label>
-            <input type="checkbox" name="weekdayChecks" id="sendon-wednesday" checked/>
-            <span>__MSG_sendWednesdayLabel__</span>
-          </label>
-          <br/>
-          <label>
-            <input type="checkbox" name="weekdayChecks" id="sendon-thursday" checked/>
-            <span>__MSG_sendThursdayLabel__</span>
-          </label>
-          <label>
-            <input type="checkbox" name="weekdayChecks" id="sendon-friday" checked/>
-            <span>__MSG_sendFridayLabel__</span>
-          </label>
-          <label>
-            <input type="checkbox" name="weekdayChecks" id="sendon-saturday"/>
-            <span>__MSG_sendSaturdayLabel__</span>
-          </label>
-        </div>
-      </div>
-    </section>
-
-    <section style="display:block;" id="section-until">
-      <div style="display: table-row;">
-        <div style="display: table-cell;white-space:nowrap;">
-          <label style="margin-right:0.5em;">
-            <input type="checkbox" id="senduntil"/>
-            <span>__MSG_sendUntilLabel__</span>
-          </label>
-        </div>
-        <div id="untilDiv">
-          <div style="display: table-cell;">
-            <input id="senduntil-date" type="date"/>
-            <input id="senduntil-time" type="time" value="23:59"/>
-          </div>
-        </div>
-      </div>
-    </section>
+    <div class="secondary">
+      <button id="sendNow">שלח כעת</button>
+      <button id="placeInOutbox">העבר לתיבת דואר יוצא</button>
     </div>
 
-    <section style="text-align: center;">
-      <label style="margin-right:2%;">
-        <input type="button" id="save-defaults"
-          value="__MSG_saveDefaultsLabel__"/>
-      </label>
-      <label style="margin-left:2%;">
-        <input type="button" id="clear-defaults"
-          value="__MSG_clearDefaultsLabel__"/>
-      </label>
-    </section>
+    <details class="advanced" id="aag-advanced">
+      <summary>חזרה על השליחה ואפשרויות נוספות</summary>
 
-    <section style="clear:both;display:block;">
-      <button style="width:100%; margin:0;" id="sendScheduleButton" disabled
-              title="__MSG_sendlater.prompt.sendat.tooltip__">
-        Enter a valid date above
-      </button>
-      <br/>
-      <table style="width:100%">
-        <tr>
-          <td style="width:33%">
-            <button id="quick-opt-1" style="width:100%;" class="delayButton">
-              in 15 minutes
-            </button>
-          </td>
-          <td style="width:33%">
-            <button id="quick-opt-2" style="width:100%;" class="delayButton">
-              in 30 minutes
-            </button>
-          </td>
-          <td style="width:33%">
-            <button id="quick-opt-3" style="width:100%;" class="delayButton">
-              in 2 hours
-            </button>
-          </td>
-        </tr>
-      </table>
-      <table style="width:100%;float:center;">
-        <tr>
-          <td>
-            <button id="sendNow"
-              title="__MSG_sendNowTooltip__"
-              style="margin:0 2.5%;width:95%;" class="delayButton">
-              __MSG_sendNowLabel__
-            </button>
-          </td>
-          <td>
-              <button id="placeInOutbox"
-                title="__MSG_sendlater.prompt.sendlater.tooltip__"
-                style="margin:0 2.5%;width:95%;" class="delayButton">
-                __MSG_sendlater.prompt.sendlater.label__
-              </button>
-            </td>
-        </tr>
-      </table>
-    </section>
+      <div class="adv-section">
+        <p class="adv-title">חזרה על השליחה</p>
+        <div class="radios">
+          <label><input type="radio" id="once" name="recur" value="none" checked> ללא (חד־פעמי)</label>
+          <label><input type="radio" id="minutely" name="recur" value="minutely"> כל דקה</label>
+          <label><input type="radio" id="daily" name="recur" value="daily"> יומי</label>
+          <label><input type="radio" id="weekly" name="recur" value="weekly"> שבועי</label>
+          <label><input type="radio" id="monthly" name="recur" value="monthly"> חודשי</label>
+          <label><input type="radio" id="yearly" name="recur" value="yearly"> שנתי</label>
+          <label id="function-recur-radio">
+            <input type="radio" id="function" name="recur" value="function"> פונקציה
+            <select id="recurFuncSelect"></select>
+            <div id="showHideFunctionHelp">(הסבר על הפונקציה)</div>
+            <div id="funcHelpDiv"></div>
+          </label>
+        </div>
+
+        <div id="recurrence-spec">
+          <div id="recur-time-args-div">
+            <span>כל</span>
+            <input type="number" id="recur-multiplier" value="1" min="1">
+            <span id="recurperiod_plural">ימים</span>
+          </div>
+          <div id="monthly-options-div">
+            <input type="checkbox" id="recur-monthly-byweek">
+            <span id="recur-monthly-byweek-options">
+              <select id="recur-monthly-byweek-week">
+                <option value="1">הראשון</option>
+                <option value="2">השני</option>
+                <option value="3">השלישי</option>
+                <option value="4">הרביעי</option>
+                <option value="5">החמישי</option>
+              </select>
+              <select id="recur-monthly-byweek-day">
+                <option value="0">ביום ראשון</option>
+                <option value="1">ביום שני</option>
+                <option value="2">ביום שלישי</option>
+                <option value="3">ביום רביעי</option>
+                <option value="4">ביום חמישי</option>
+                <option value="5">ביום שישי</option>
+                <option value="6">בשבת</option>
+              </select>
+              <span>של כל חודש</span>
+            </span>
+          </div>
+          <div id="recur-function-args-div">
+            <label>
+              <span>ארגומנטים לפונקציה:</span>
+              <input type="text" id="recur-function-args" dir="ltr">
+            </label>
+          </div>
+          <div id="cancel-on-reply-div" title="הפסק את החזרה ברגע שמתקבלת תשובה להודעה">
+            <label><input type="checkbox" id="recur-cancelonreply"> בטל את החזרה כשמתקבלת תשובה</label>
+          </div>
+        </div>
+      </div>
+
+      <div id="recur-limits">
+        <div class="adv-section" id="section-between">
+          <div class="inline">
+            <label><input type="checkbox" id="sendbetween"> רק בין השעות</label>
+            <span id="betweenDiv">
+              <input id="sendbetween-start" type="time" value="09:00">
+              –
+              <input id="sendbetween-end" type="time" value="17:00">
+            </span>
+          </div>
+        </div>
+
+        <div class="adv-section" id="section-only-on-days">
+          <div class="inline">
+            <label><input type="checkbox" id="sendon"> רק בימים</label>
+          </div>
+          <div class="days" id="onlyOnDiv">
+            <label><input type="checkbox" name="weekdayChecks" id="sendon-sunday" checked> א׳</label>
+            <label><input type="checkbox" name="weekdayChecks" id="sendon-monday" checked> ב׳</label>
+            <label><input type="checkbox" name="weekdayChecks" id="sendon-tuesday" checked> ג׳</label>
+            <label><input type="checkbox" name="weekdayChecks" id="sendon-wednesday" checked> ד׳</label>
+            <label><input type="checkbox" name="weekdayChecks" id="sendon-thursday" checked> ה׳</label>
+            <label><input type="checkbox" name="weekdayChecks" id="sendon-friday"> ו׳</label>
+            <label><input type="checkbox" name="weekdayChecks" id="sendon-saturday"> ש׳</label>
+          </div>
+        </div>
+
+        <div class="adv-section" id="section-until">
+          <div class="inline">
+            <label><input type="checkbox" id="senduntil"> עד לתאריך</label>
+            <span id="untilDiv">
+              <input id="senduntil-date" type="date">
+              <input id="senduntil-time" type="time" value="23:59">
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="defaults">
+        <label><input type="button" id="save-defaults" value="שמור את הערכים כברירת מחדל"></label>
+        <label><input type="button" id="clear-defaults" value="נקה ברירות מחדל"></label>
+      </div>
+    </details>
 
     <script type="text/javascript" src="/utils/sugar-custom.js"></script>
     <script type="text/javascript" src="/utils/tools.js"></script>
     <script type="text/javascript" src="/ui/popup.js"></script>
   </body>
-
 </html>

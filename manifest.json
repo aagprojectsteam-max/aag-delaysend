@@ -1,9 +1,9 @@
 {
   "manifest_version": 2,
 
-  "name": "__MSG_extensionName__",
+  "name": "AAG DelaySend",
 
-  "description": "__MSG_extensionDescription__",
+  "description": "Scheduled sending with a clean Hebrew RTL window. AAG fork of Send Later (Extended-Thunder/send-later, MPL-2.0).",
 
   "version": "10.7.8",
 
@@ -17,7 +17,7 @@
 
   "applications": {
     "gecko": {
-      "id": "sendlater3@kamens.us",
+      "id": "delaysend@aag.local",
       "strict_min_version": "126.0",
       "strict_max_version": "*"
     }
@@ -70,7 +70,7 @@
     "browser_style": false,
     "default_area": "maintoolbar",
     "default_icon": "ui/icons/icon.png",
-    "default_title": "__MSG_extensionName__"
+    "default_title": "AAG DelaySend"
   },
 
   "commands": {
@@ -98,8 +98,8 @@
   "browser_action": {
     "browser_style": false,
     "default_icon": "ui/icons/icon.png",
-    "default_label": "__MSG_extensionName__",
-    "default_title": "__MSG_extensionName__",
+    "default_label": "AAG DelaySend",
+    "default_title": "AAG DelaySend",
     "default_popup": "ui/browserActionPopup.html"
   },
 

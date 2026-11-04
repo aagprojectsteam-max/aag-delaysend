@@ -2246,7 +2246,7 @@ if (SLTools.i18n === null) {
         );
         EP = ExtensionParent;
       }
-      const ext = EP.GlobalManager.getExtension("sendlater3@kamens.us");
+      const ext = EP.GlobalManager.getExtension("delaysend@aag.local");
 
       SLTools.i18n = {
         getUILanguage() {
