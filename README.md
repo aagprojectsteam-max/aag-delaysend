@@ -1,3 +1,10 @@
+> **AAG DelaySend** — this repository is a fork of Send Later with the
+> scheduling window rebuilt in Hebrew/RTL (quick chips, one primary button,
+> collapsed recurrence, default "once"). Download the add-on from the
+> [Releases](https://github.com/aagprojectsteam-max/aag-delaysend/releases)
+> page; what changed, how to build and how to install:
+> [README-AAG.md](README-AAG.md). Everything below is upstream's README.
+
 Send Later Thunderbird extension
 ============================
 
